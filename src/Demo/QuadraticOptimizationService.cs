@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using MathNet.Numerics.LinearAlgebra;
 // ReSharper disable InconsistentNaming
 
@@ -30,7 +31,7 @@ namespace Demo
             var A = Matrix<double>.Build.DenseOfArray(_A);
             var x = Vector<double>.Build.DenseOfArray(_x);
 
-            return Core.Solve(c, D, A, x, _B, _Bz);
+            return Core.Solve(c, D, A, x, _B.ToArray(), _Bz.ToArray());
         }
 
         public static QuadraticResult Solve(double[] c, double[,] D, double[,] A, double[] x, ISet<int> B, ISet<int> Bz)

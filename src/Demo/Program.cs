@@ -6,7 +6,7 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            var variant = args.Length == 0 || int.TryParse(args[0], out var v)
+            var variant = args.Length == 0 || !int.TryParse(args[0], out var v)
                 ? 12
                 : v;
             var (c, d, a, x, b, bz) = GetData(variant);
@@ -25,10 +25,10 @@ namespace Demo
 
             if (variant == 12)
             {
-                c = new double[] {-1, 0, 0};
-                d = new double[,] {{4, -2, 0}, {-2, 4, 0}, {0, 0, 1}};
-                a = new double[,] {{6, 6, 0}, {3, 0, 1}};
-                x = new double[] {0, 0.5, 1};
+                c = new double[] {-1, -1, -1};
+                d = new double[,] {{8, -4, 0}, {-4, 4, 0}, {0, 0, 2}};
+                a = new double[,] {{2, 4, 0}, {1, 0, 1}};
+                x = new double[] {0, 1, 1};
                 b = new HashSet<int> {1, 2};
                 bz = new HashSet<int> {1, 2};
             }
@@ -45,10 +45,10 @@ namespace Demo
             
             else if (variant == 1)
             {
-                c = new double[] {-1, -1, -1};
-                d = new double[,] {{8, -4, 0}, {-4, 4, 0}, {0, 0, 2}};
-                a = new double[,] {{2, 4, 0}, {1, 0, 1}};
-                x = new double[] {0, 1, 1};
+                c = new double[] {-1, 0, 0};
+                d = new double[,] {{4, -2, 0}, {-2, 4, 0}, {0, 0, 1}};
+                a = new double[,] {{6, 6, 0}, {3, 0, 1}};
+                x = new double[] {0, 0.5, 1};
                 b = new HashSet<int> {1, 2};
                 bz = new HashSet<int> {1, 2};
             }
