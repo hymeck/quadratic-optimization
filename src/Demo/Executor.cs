@@ -12,14 +12,20 @@ namespace Demo
         private readonly ISet<int> _B;
         private readonly ISet<int> _Bz;
 
-        public Executor(double[] c, double[,] d, double[,] a, double[] x, ISet<int> b, ISet<int> bz)
+        public Executor(
+            double[] c, 
+            double[,] D, 
+            double[,] A, 
+            double[] x, 
+            ISet<int> B,
+            ISet<int> Bz)
         {
             _c = c;
-            _D = d;
-            _A = a;
+            _D = D;
+            _A = A;
             _x = x;
-            _B = b;
-            _Bz = bz;
+            _B = B;
+            _Bz = Bz;
         }
 
         public QuadraticResult Perform()
@@ -29,13 +35,13 @@ namespace Demo
 
         public static QuadraticResult Perform(
             double[] c, 
-            double[,] d, 
-            double[,] a, 
+            double[,] D, 
+            double[,] A, 
             double[] x, 
-            ISet<int> b,
-            ISet<int> bz)
+            ISet<int> B,
+            ISet<int> Bz)
         {
-            var executor = new Executor(c, d, a, x, b, bz);
+            var executor = new Executor(c, D, A, x, B, Bz);
             return executor.Perform();
         }
     }

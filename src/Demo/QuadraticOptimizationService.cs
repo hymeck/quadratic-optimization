@@ -31,7 +31,7 @@ namespace Demo
             var A = Matrix<double>.Build.DenseOfArray(_A);
             var x = Vector<double>.Build.DenseOfArray(_x);
 
-            return Core.Solve(c, D, A, x, _B.ToArray(), _Bz.ToArray());
+            return Core.Solve(c, D, A, x, _B.ToList(), _Bz.ToList());
         }
 
         public static QuadraticResult Solve(double[] c, double[,] D, double[,] A, double[] x, ISet<int> B, ISet<int> Bz)

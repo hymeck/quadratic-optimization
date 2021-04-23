@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 // ReSharper disable InconsistentNaming
 
@@ -10,7 +9,7 @@ namespace Demo
 {
     public static class Core
     {
-        public static QuadraticResult Solve(Vector<double> c, Matrix<double> D, Matrix<double> A, Vector<double> x, int[] Jb, int[] Jbz)
+        public static QuadraticResult Solve(Vector<double> c, Matrix<double> D, Matrix<double> A, Vector<double> x, List<int> Jb, List<int> Jbz)
         {
             while (true)
             {
@@ -23,11 +22,12 @@ namespace Demo
 
                 var cbx = Vector<double>.Build.DenseOfEnumerable(Jb
                     .Select(basisItem => -cx[basisItem])); // minus cx[basisItem] because it is used to build ux
+                
+                var Ab = Matrix<double>.Build.Dense(A.RowCount, Jb.Count);
+                for (var i = 0; i < Jb.Count; i++)
+                    Ab.SetColumn(i, A.Column(Jbz[i]));
 
-                var inversedAb = Matrix<double>.Build.DenseOfColumns(Jbz
-                        .Select(A.Column))
-                    .Inverse();
-
+                var inversedAb = Ab.Inverse();
                 // var ux = inversedAb.Multiply(cbx);
                 var ux = inversedAb.LeftMultiply(cbx);
                 
@@ -63,18 +63,19 @@ namespace Demo
                 var bz = Buildbz(D, A, Jbz, j0);
 
                 var xx = inversedH.Negate().Multiply(bz);
-                for (var i = 0; i < Jbz.Length; i++)
+                for (var i = 0; i < Jbz.Count; i++)
                     l[Jbz[i]] = xx[i];
 
 
                 var sigma = D.LeftMultiply(l).DotProduct(l);
 
-                var theta = Enumerable.Repeat(double.MaxValue, A.RowCount).ToArray();
+                var theta = Enumerable.Repeat(double.MaxValue, A.ColumnCount).ToArray();
                 if (sigma != 0)
                     theta[j0] = Math.Abs(deltaX[j0]) / sigma;
-                for (var i = 0; i < A.RowCount; i++)
-                    if (Jbz.Contains(i) && l[i] < 0)
-                        theta[i] = -(x[i] - l[i]);
+                for (var i = 0; i < A.ColumnCount; i++)
+                    if (Jbz.Contains(i))
+                        if (l[i] < 0)
+                            theta[i] = -(x[i] / l[i]);
 
                 var min = double.MaxValue;
                 var pi = 0;
@@ -89,8 +90,84 @@ namespace Demo
                     return QuadraticResult.Empty;
 
                 x += l.Multiply(min);
-                
+
+                // f1 = np.setdiff1d(Jbz, Jb)
+                var f1 = Jbz
+                    .Except(Jb)
+                    .ToList();
+
+                if (pi == j0) // case 1
+                    Jbz.Add(j0);
+                else if (f1.Contains(pi)) // case 2
+                    Jbz.Remove(pi); // or `RemoveAll()` is enough, idk
+                else // case 3
+                {
+                    var fl = GetFl(A, Jb, Jbz, pi, f1, inversedAb);
+
+                    if (fl != 0) 
+                        continue;
+                    
+                    var s = Jb.IndexOf(pi); // returns -1 if there is no pi
+                    if (s == -1)
+                        continue;
+
+                    // for i in f1:
+                    //     q = np.dot(Ab_inv, a[:, i - 1])
+                    var q = inversedAb.Multiply(A.Column(f1[^1]));
+
+                    if (q[s] == 0)
+                    {
+                        for (var ii = 0; ii < Jb.Count; ii++)
+                            if (Jb[ii] == pi)
+                                Jb[ii] = j0;
+                        
+                        for (var ii = 0; ii < Jbz.Count; ii++)
+                            if (Jbz[ii] == pi)
+                                Jbz[ii] = j0;
+                    }
+
+                    if (Jb.SequenceEqual(Jbz)) // np.array_equal(Jb, Jbz)
+                    {
+                        for (var ii = 0; ii < Jb.Count; ii++)
+                            if (Jb[ii] == pi)
+                                Jb[ii] = j0;
+                        
+                        for (var ii = 0; ii < Jbz.Count; ii++)
+                            if (Jbz[ii] == pi)
+                                Jbz[ii] = j0;
+                    }
+                }
             }
+        }
+
+        private static int GetFl(Matrix<double> A, IList<int> Jb, ICollection<int> Jbz, int pi, List<int> f1, Matrix<double> inversedAb)
+        {
+            var fl = 0;
+
+            var s = Jb.IndexOf(pi); // returns -1 if there is no pi
+
+            if (s != -1)
+            {
+                for (var i = 0; i < f1.Count; i++)
+                {
+                    var item = f1[i];
+                    var q = inversedAb.Multiply(A.Column(item));
+                    if (q[s] != 0)
+                    {
+                        for (var ii = 0; ii < Jb.Count; ii++)
+                        {
+                            if (Jb[ii] == pi)
+                                Jb[ii] = item;
+                        }
+
+                        Jbz.Remove(pi); // or `RemoveAll()` is enough, idk
+                        fl = 1;
+                        break;
+                    }
+                }
+            }
+
+            return fl;
         }
 
         private static int FindJ0(Vector<double> deltaX)

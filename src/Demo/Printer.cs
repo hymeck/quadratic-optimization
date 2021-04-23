@@ -7,7 +7,7 @@
             
             var strRes = result.Solution.Length == 0
                 ? "[]"
-                : $"[{string.Join("; ", result)}]";
+                : $"[{string.Join("; ", result.Solution)}]";
             System.Console.WriteLine(strRes);
         }
     }
